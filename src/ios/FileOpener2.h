@@ -29,6 +29,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 @property(nonatomic, strong) UIDocumentInteractionController *controller;
 @property(nonatomic, strong) CDVViewController *cdvViewController;
+@property(nonatomic, retain) NSTimer *isItDoneHelper;
 
 - (void) open: (CDVInvokedUrlCommand*)command;
 
