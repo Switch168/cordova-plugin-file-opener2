@@ -139,7 +139,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 }
 - (void) dismissDoController {
     // give delay a for dismiss is in progress warning
-    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.25);
+    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.50);
     dispatch_after(delay, dispatch_get_main_queue(), ^(void){
         [docController dismissPreviewAnimated: YES];
     });
