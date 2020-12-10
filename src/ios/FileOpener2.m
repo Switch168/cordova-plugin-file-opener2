@@ -30,7 +30,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 @synthesize controller = docController;
 
 - (void) open: (CDVInvokedUrlCommand*)command {
+    // start timer loop to check if user comes back from share extension while using the app
+    // because there is not direct communications between extension and main app
+    self.isItDoneHelper = [NSTimer scheduledTimerWithTimeInterval:1
+        target:self
+        selector:@selector(didForwardWithinApp)
+        userInfo:nil
+        repeats:YES];
 
+    // used by OpenWithPlugin.m
+    [[NSNotificationCenter defaultCenter] addObserver:self
+           selector:@selector(dismissDoController)
+           name:@"DismissDoController"
+           object:nil];
+    
   NSString *path = [command.arguments objectAtIndex:0];
 	NSString *contentType = [command.arguments objectAtIndex:1];
 	BOOL showPreview = YES;
@@ -119,7 +132,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		[self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 	});
 }
-
+- (void) didForwardWithinApp{
+    [[NSNotificationCenter defaultCenter]
+          postNotificationName:@"didForwardWithinApp"
+          object:self];
+}
+- (void) dismissDoController {
+    // give delay a for dismiss is in progress warning
+    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, NSEC_PER_SEC * 0.25);
+    dispatch_after(delay, dispatch_get_main_queue(), ^(void){
+        [docController dismissPreviewAnimated: YES];
+    });
+}
 @end
 
 @implementation FileOpener2 (UIDocumentInteractionControllerDelegate)
@@ -134,4 +158,18 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 		}
 		return presentingViewController;
 	}
+    // clear timer loop initiated at top
+    - (UIViewController *)documentInteractionControllerDidEndPreview:(UIDocumentInteractionController *)controller {
+        UIViewController *presentingViewController = self.viewController;
+        if(self.isItDoneHelper != nil) {
+            [NSTimer scheduledTimerWithTimeInterval:1
+                                             target:self
+                                           selector:@selector(didForwardWithinApp)
+                                           userInfo:nil
+                                            repeats:NO];
+            [self.isItDoneHelper invalidate];
+            self.isItDoneHelper = nil;
+        }
+        return presentingViewController;
+    }
 @end
